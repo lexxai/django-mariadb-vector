@@ -1,3 +1,4 @@
 .*
-.idea\
+.idea/
 uv.lock
+/dist/
