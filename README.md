@@ -56,17 +56,24 @@ from django.db import models
 from django_mariadb_vector import MariaDBVectorField, Search
 
 class RecommendationManager(models.Manager):
-    def similar_to_vector(self, vector, limit=5):
-        return self.get_queryset().annotate(
+    def similar_to_vector(self, vector, limit=5, exclude_id=None):
+        queryset = self.get_queryset().annotate(
             distance=Search("embedding", vector)
-        ).order_by("distance")[:limit]
+        ).order_by("distance")
+
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+
+        return queryset[:limit]
 
     def similar_to(self, id: int, limit=5):
         try:
             vector = self.get_queryset().values_list("embedding", flat=True).get(id=id)
         except self.model.DoesNotExist:
             return self.get_queryset().none()
-        return self.similar_to_vector(vector, limit=limit)
+        
+        # Pass the ID to similar_to_vector to exclude it there
+        return self.similar_to_vector(vector, limit=limit, exclude_id=id)
 
 class MyModel(models.Model):
     embedding = MariaDBVectorField(dimensions=1536)
