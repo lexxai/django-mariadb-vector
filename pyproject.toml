@@ -1,6 +1,6 @@
 [project]
 name = "django-mariadb-vector"
-version = "0.1.1"
+version = "0.1.2"
 description = "Django ORM support for MariaDB Vector field (MariaDB 11.8.2+)"
 authors = [{ name = "lexxai", email = "lexxai@gmail.com" }]
 license = { text = "MIT" }
@@ -25,3 +25,13 @@ packages = ["src/django_mariadb_vector"]
 
 [dependency-groups]
 dev = []
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.flake8]
+max-line-length = 120
