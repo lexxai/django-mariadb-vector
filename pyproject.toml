@@ -1,13 +1,13 @@
 [project]
 name = "django-mariadb-vector"
-version = "0.1.0"
+version = "0.1.1"
 description = "Django ORM support for MariaDB Vector field (MariaDB 11.8.2+)"
 authors = [{ name = "lexxai", email = "lexxai@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "Django>=5.0",
+    "Django>=5.2",
 ]
 
 [project.optional-dependencies]

@@ -115,6 +115,9 @@ The following functions are available in `django_mariadb_vector.functions`:
 - `VecFromText(text)`: Converts JSON string to MariaDB VECTOR format.
 - `VecToText(expression)`: Converts MariaDB VECTOR format to JSON string.
 
+## Reference
+- https://mariadb.com/docs/server/reference/sql-functions/vector-functions
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
