@@ -110,6 +110,12 @@ The following functions are available in `django_mariadb_vector.functions`:
 ## Reference
 - https://mariadb.com/docs/server/reference/sql-functions/vector-functions
 
+## Demo 
+A minimal demo project showing how to build article recommendations using vector similarity in Django with MariaDB as the database using the `django-mariadb-vector` library.
+
+- https://github.com/lexxai/django-mariadb-vector-demo
+
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
