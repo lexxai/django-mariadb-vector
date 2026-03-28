@@ -4,11 +4,23 @@ version = "0.1.2"
 description = "Django ORM support for MariaDB Vector field (MariaDB 11.8.2+)"
 authors = [{ name = "lexxai", email = "lexxai@gmail.com" }]
 license = { text = "MIT" }
+license-files = ["LICEN[CS]E*"]
+keywords = ["django", "vector", "mariadb", "vector-search", "djang-orm", "vector-database"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "Django>=5.2",
 ]
+
+[project.urls]
+Homepage = "https://github.com/lexxai/django-mariadb-vector"
+Repository = "https://github.com/lexxai/django-mariadb-vector.git"
+Issues = "https://github.com/lexxai/django-mariadb-vector/issues"
+Demo = "https://github.com/lexxai/django-mariadb-vector-demo"
 
 [project.optional-dependencies]
 test = [
