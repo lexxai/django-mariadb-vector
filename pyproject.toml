@@ -1,6 +1,6 @@
 [project]
 name = "django-mariadb-vector"
-version = "0.1.2"
+version = "0.2.0"
 description = "Django ORM support for MariaDB Vector field (MariaDB 11.8.2+)"
 authors = [{ name = "lexxai", email = "lexxai@gmail.com" }]
 license = { text = "MIT" }
@@ -11,7 +11,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "Django>=5.2",
 ]
@@ -23,6 +23,9 @@ Issues = "https://github.com/lexxai/django-mariadb-vector/issues"
 Demo = "https://github.com/lexxai/django-mariadb-vector-demo"
 
 [project.optional-dependencies]
+orjson = [
+    "orjson>=3.11",
+]
 test = [
     "pytest",
     "pytest-django",

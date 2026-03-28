@@ -1,0 +1,52 @@
+name: django-mariadb-vector-test
+services:
+  test:
+    image: ${TAG:-django-test}
+    build:
+      context: ../../
+      dockerfile: tests/docker/Dockerfile
+
+    environment:
+      - DB_NAME=test
+      - DB_USER=user_test
+      - DB_PASSWORD=changeme
+      - DB_HOST=db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lan
+
+  db:
+    image: mariadb:latest
+    volumes:
+      - db_data:/var/lib/mysql
+
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_change_me
+      - MYSQL_DATABASE=test
+      - MYSQL_USER=user_test
+      - MYSQL_PASSWORD=changeme
+    expose:
+      - "3306"
+#    ports:
+#      - "3306:3306"
+    networks:
+      - lan
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "/usr/bin/mariadb -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} -e 'SELECT 1' || exit 1"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  db_data:
+
+networks:
+  lan:
+    driver: bridge
+
