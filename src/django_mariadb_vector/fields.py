@@ -1,5 +1,5 @@
 try:
-    import orjson
+    from orjson import orjson
 
     HAS_ORJSON = True
 except ImportError:
@@ -58,25 +58,26 @@ class MariaDBVectorField(models.Field):
         return f"VECTOR({self.dimensions})"
 
     def from_db_value(self, value, expression, conn):
-        if value is None:
-            return value
-        if isinstance(value, list):
-            return value
-        if isinstance(value, bytes):
-            len_value = len(value)
-            num_floats = len_value // 4
-            if num_floats != self.dimensions:
-                raise ValueError(
-                    f"Invalid vector length for binary response: {len_value} bytes, expected {self.dimensions * 4} bytes"
-                )
-            float_values = unpack(f"<{num_floats}f", value)
-            return list(float_values)
-        # If MariaDB returns a JSON-like string, convert it to a list
-        if isinstance(value, str) and value.startswith("["):
-            if HAS_ORJSON:
-                return orjson.loads(value.encode())
-            return json.loads(value)
-        return value
+        match value:
+            case None | list():
+                return value
+
+            case bytes() as b:
+                len_value = len(b)
+                if len_value != self.dimensions * 4:
+                    raise ValueError(f"Invalid vector length: {len_value} bytes, expected {self.dimensions * 4}")
+
+                # Unpack and clean up binary noise
+                return [round(f, 7) for f in unpack(f"<{self.dimensions}f", b)]
+
+            case str() as s if s.startswith("["):
+                # Use orjson if available, otherwise fallback to standard json
+                if HAS_ORJSON:
+                    return orjson.loads(value.encode())
+                return json.loads(value)
+
+            case _:
+                return value
 
     def get_prep_value(self, value):
         if value is None:

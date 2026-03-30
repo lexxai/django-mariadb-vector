@@ -1,8 +1,10 @@
 from django.test import TestCase
 from django.db import connection
-from django_mariadb_vector.fields import MariaDBVectorField, MariaDBVectorIndex
+from django_mariadb_vector import MariaDBVectorField, MariaDBVectorIndex, __version__
 from django_mariadb_vector.functions import Search, VecDistance
 from .models import VectorModel
+
+print(f"Running tests with django-mariadb-vector version: {__version__}")
 
 
 class FieldTest(TestCase):
