@@ -22,6 +22,7 @@ This project fills that gap by providing a clean, Django-native way to work with
 - Recommendation Manager for Django models
 - No raw SQL required
 - Works with MariaDB 11.8.2+
+- Optionally [optimization for better performance](assets/images/perf_v0.2.0_sm.png) when working with vectors with use package `orjson` and `binary_responce` option
 
 
 ## Why use this
@@ -73,6 +74,12 @@ Typical workflow: text → embedding → store → similarity search
 pip install django-mariadb-vector
 ```
 
+### Optional: faster JSON serialization
+For better performance when working with vectors, install with the orjson extra:
+```bash
+pip install django-mariadb-vector[orjson]
+```
+
 ## Usage
 
 models.py:
@@ -107,6 +114,52 @@ results = MyModel.objects.annotate(
 ).order_by("distance")[:5]
 ```
 
+### Optimization: `orlson` for better performance
+in case of installation `django-mariadb-vector` library with extra `orjson` depencedcy
+```bash
+pip install django-mariadb-vector[orjson]
+```
+or 
+```bash
+uv add django-mariadb-vector[orjson]
+```
+#### Benefits orlson vs json (batch mode)
+- Up to **~20× faster** compared to the standard `json` library on generate vector data
+- Up to **~8× faster** compared to the standard `json` library on response vector data
+
+> **Note:** Performance was measured using 20,000 iterations (3 runs) in  
+> `tests/test_performance.py`, with randomly generated vectors of dimension 3072.
+
+
+### Optimization: `binary_response` for better performance
+
+The `binary_response` option improves performance when working with vectors by returning data in a compact binary format instead of JSON.
+
+- Vectors are returned as a sequence of **little-endian IEEE 754 float32 bytes** (4 bytes per value)  
+  ([MariaDB reference](https://mariadb.com/docs/server/reference/sql-functions/vector-functions/vec_fromtext))
+- Reduces network traffic between MariaDB and your application
+- Eliminates JSON parsing overhead on the Python side
+
+#### Benefits of binary response (batch mode)
+
+- Up to **~16× faster** compared to the standard `json` library
+- About **~2× faster** compared to `orjson`
+- Lower bandwidth usage for large vector payloads
+
+> **Note:** Performance was measured using 20,000 iterations (3 runs) in  
+> `tests/test_performance.py`, with randomly generated vectors of dimension 3072.
+
+#### Usage of `binary_response`
+
+```python
+from django.db import models
+from django_mariadb_vector import MariaDBVectorField
+
+class MyModel(models.Model):
+    embedding = MariaDBVectorField(dimensions=3, binary_response=True)
+```
+
+
 ### Recommendation Manager for Django models
 
 Using a `RecommendationManager` can simplify vector searches in your application:
@@ -130,6 +183,7 @@ class MyModel(models.Model):
             MariaDBVectorIndex(fields=["embedding"], dimensions=3, m=16),
         ]
 ```
+
 
 #### Example of usage Manager
 ```python
@@ -175,6 +229,22 @@ A minimal demo project showing how to build article recommendations using vector
 - Demo repo: https://github.com/lexxai/django-mariadb-vector-demo
 - Example: https://github.com/lexxai/django-mariadb-vector-demo/tree/main/docs
 
+
+## Docker Testing
+
+You can test the build and run tests in Docker for different Python versions and OS images.
+The Dockerfile is located in `tests/docker/Dockerfile`.
+
+### Using the helper script (Linux/macOS)
+```bash
+bash tests/docker/run_docker_tests.sh
+```
+
+### Manual build example
+```bash
+docker build --build-arg PYTHON_VERSION=3.13 -f tests/docker/Dockerfile -t django-mariadb-vector:test-3.13 .
+docker run --rm django-mariadb-vector:test-3.13
+```
 
 ## Contributing
 

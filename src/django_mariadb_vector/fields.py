@@ -1,6 +1,13 @@
-import json
+try:
+    from orjson import orjson
+
+    HAS_ORJSON = True
+except ImportError:
+    import json
+
+    HAS_ORJSON = False
 import logging
-import math
+from struct import unpack
 from enum import StrEnum
 
 from django.db import models
@@ -34,8 +41,9 @@ class MariaDBVectorField(models.Field):
 
     description = "Vector field for MariaDB 11.8+"
 
-    def __init__(self, dimensions=768, *args, **kwargs):
+    def __init__(self, dimensions: int = 768, binary_response: bool = False, *args, **kwargs):
         self.dimensions = dimensions
+        self.binary_response = binary_response
         kwargs.pop("null", None)  # force always False
         kwargs.pop("blank", None)  # force always False
         super().__init__(*args, **kwargs)
@@ -49,16 +57,27 @@ class MariaDBVectorField(models.Field):
     def db_type(self, conn):
         return f"VECTOR({self.dimensions})"
 
-    @staticmethod
-    def from_db_value(value, expression, conn):
-        if value is None:
-            return value
-        if isinstance(value, list):
-            return value
-        # If MariaDB returns a JSON-like string, convert it to a list
-        if isinstance(value, str) and value.startswith("["):
-            return json.loads(value)
-        return value
+    def from_db_value(self, value, expression, conn):
+        match value:
+            case None | list():
+                return value
+
+            case bytes() as b:
+                len_value = len(b)
+                if len_value != self.dimensions * 4:
+                    raise ValueError(f"Invalid vector length: {len_value} bytes, expected {self.dimensions * 4}")
+
+                # Unpack and clean up binary noise
+                return [round(f, 7) for f in unpack(f"<{self.dimensions}f", b)]
+
+            case str() as s if s.startswith("["):
+                # Use orjson if available, otherwise fallback to standard json
+                if HAS_ORJSON:
+                    return orjson.loads(value.encode())
+                return json.loads(value)
+
+            case _:
+                return value
 
     def get_prep_value(self, value):
         if value is None:
@@ -72,10 +91,9 @@ class MariaDBVectorField(models.Field):
                 )
                 # Return zero vector with correct dimensions
                 value = [0.0] * self.dimensions
-
-            if any(not math.isfinite(x) for x in value):
-                raise ValueError(f"Invalid vector value: {value}")
-            return json.dumps(value, separators=(",", ":"))
+            if HAS_ORJSON:
+                return orjson.dumps(value, option=orjson.OPT_NON_STR_KEYS).decode()
+            return json.dumps(value, separators=(",", ":"), allow_nan=False)
         return value
 
     @staticmethod
@@ -84,6 +102,8 @@ class MariaDBVectorField(models.Field):
         return "VEC_FromText(%s)"
 
     def select_format(self, compiler, sql, params):
+        if self.binary_response:
+            return sql, params
         """Automatically wrap field in VEC_ToText() when selecting"""
         return f"VEC_ToText({sql})", params
 
@@ -152,7 +172,9 @@ def warmup_vector_index(table_name, column_name):
         )
         return response
 
+
 MARIADB_MIN_VERSION = (11, 8, 2)
+
 
 def check_mariadb_version(min_version=MARIADB_MIN_VERSION):
     """Check MariaDB version using Django ORM introspection."""
@@ -177,4 +199,3 @@ def check_mariadb_version(min_version=MARIADB_MIN_VERSION):
         raise ValueError(
             f"MariaDB version {version_str} is below required version {min_version_str} for VECTOR support"
         )
-
