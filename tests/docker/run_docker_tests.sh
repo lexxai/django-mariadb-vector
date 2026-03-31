@@ -1,11 +1,11 @@
 #!/bin/bash
 # Helper script to run docker builds for different python versions and OS
 
-#PYTHON_VERSIONS=("3.11" "3.12" "3.13" "3.14")
-#OS_TYPES=("-slim" "-slim-bookworm" "-slim-trixie")
+PYTHON_VERSIONS=("3.11" "3.12" "3.13" "3.14")
+OS_TYPES=("-slim" "-slim-bookworm" "-slim-trixie")
 
-PYTHON_VERSIONS=("3.14")
-OS_TYPES=("-slim")
+#PYTHON_VERSIONS=("3.14")
+#OS_TYPES=("-slim")
 
 # Exit on any failure
 set -e
